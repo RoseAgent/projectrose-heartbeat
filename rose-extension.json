@@ -1,0 +1,13 @@
+{
+  "id": "rose-heartbeat",
+  "name": "Heartbeat",
+  "version": "1.0.0",
+  "description": "Automatically processes deferred tasks and scheduled work on a configurable interval.",
+  "author": "ProjectRose",
+  "navItem": { "label": "Heartbeat", "iconName": "heartbeat" },
+  "provides": {
+    "pageView": true,
+    "globalSettings": true,
+    "main": true
+  }
+}
