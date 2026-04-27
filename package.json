@@ -8,7 +8,7 @@
     "./main": "./main.ts"
   },
   "scripts": {
-    "build:renderer": "esbuild renderer.ts --bundle --format=cjs --platform=browser --outfile=dist/renderer.js --external:react --external:react/jsx-runtime --external:@renderer/* --external:zustand",
+    "build:renderer": "esbuild renderer.ts --bundle --format=cjs --platform=browser --jsx=automatic --outfile=dist/renderer.js --external:react --external:react/jsx-runtime --external:@renderer/* --external:zustand",
     "build:main": "esbuild main.ts --bundle --format=cjs --platform=node --outfile=dist/main.js --external:electron --external:@main/*",
     "build": "npm run build:renderer && npm run build:main"
   },
