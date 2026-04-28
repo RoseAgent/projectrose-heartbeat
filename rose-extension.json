@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "description": "Automatically processes deferred tasks and scheduled work on a configurable interval.",
   "author": "ProjectRose",
+  "latin": "Rosa pulsus",
   "navItem": { "label": "Heartbeat", "iconName": "heartbeat" },
   "provides": {
     "pageView": true,
