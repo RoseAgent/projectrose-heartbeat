@@ -11,6 +11,8 @@ interface ExtCtx {
   broadcast: (channel: string, data: unknown) => void
   registerTools: (tools: unknown[]) => void
   runBackgroundAgent: (prompt: string, systemPrompt: string) => Promise<string>
+  registerHooks: (hooks: unknown[]) => void
+  openAgentSession: (opts: { systemPrompt: string }) => { send: (text: string) => Promise<string>; close: () => void }
 }
 
 // Marker written into idle ("Nothing to process") run logs so they can be
