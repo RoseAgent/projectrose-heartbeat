@@ -4,16 +4,10 @@ import { readdir, readFile, writeFile, stat, unlink, mkdir, rename } from 'fs/pr
 import { existsSync } from 'fs'
 import { execSync } from 'child_process'
 
-interface ExtCtx {
-  rootPath: string
-  getSettings: () => Promise<Record<string, unknown>>
-  updateSettings: (patch: Record<string, unknown>) => Promise<void>
-  broadcast: (channel: string, data: unknown) => void
-  registerTools: (tools: unknown[]) => void
-  runBackgroundAgent: (prompt: string, systemPrompt: string) => Promise<string>
-  registerHooks: (hooks: unknown[]) => void
-  openAgentSession: (opts: { systemPrompt: string }) => { send: (text: string) => Promise<string>; close: () => void }
-}
+// First-party extensions in the monorepo type-only-import the host contract
+// via a relative path. The import is erased by esbuild, so the path only
+// needs to resolve at type-check time inside the worktree.
+import type { ExtensionMainContext } from '../../ProjectRose/src/shared/extension-contract'
 
 // Marker written into idle ("Nothing to process") run logs so they can be
 // safely identified and pruned without false positives from agent output.
@@ -343,7 +337,7 @@ async function pruneIdleLogs(logsDir: string, keepFilename: string | null): Prom
   } catch { /* ignore */ }
 }
 
-async function runHeartbeat(rootPath: string, ctx: ExtCtx): Promise<string> {
+async function runHeartbeat(rootPath: string, ctx: ExtensionMainContext): Promise<string> {
   const tasksDir = prPath(rootPath, 'heartbeat', 'tasks')
   const logsDir = prPath(rootPath, 'heartbeat', 'logs')
   const allTasks = await listMdFiles(tasksDir)
@@ -653,7 +647,7 @@ async function getTaskContent(rootPath: string, filename: string): Promise<strin
 // IPC registration
 // ─────────────────────────────────────────────────────────────────────────
 
-export function register(ctx: ExtCtx): () => void {
+export function register(ctx: ExtensionMainContext): () => void {
   const { rootPath } = ctx
 
   // Quiet "unused import" warning for `rename` — kept in import block in case

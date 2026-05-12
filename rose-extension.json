@@ -9,6 +9,7 @@
   "provides": {
     "pageView": true,
     "globalSettings": true,
-    "main": true
+    "main": true,
+    "backgroundAgent": true
   }
 }
