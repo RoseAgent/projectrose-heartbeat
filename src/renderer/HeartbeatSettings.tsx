@@ -2,6 +2,13 @@ import { useSettingsStore } from '@renderer/stores/useSettingsStore'
 
 const INTERVAL_OPTIONS = [1, 2, 5, 10, 15, 30, 60]
 
+const EXTENSION_ID = 'rose-heartbeat'
+
+interface HeartbeatNs {
+  enabled?: boolean
+  intervalMinutes?: number
+}
+
 const s: Record<string, React.CSSProperties> = {
   section: { marginBottom: 24 },
   title: { fontSize: 11, fontWeight: 600, letterSpacing: '1px', textTransform: 'uppercase' as const, color: 'var(--color-text-muted)', marginBottom: 12 },
@@ -16,7 +23,14 @@ const s: Record<string, React.CSSProperties> = {
 }
 
 export function HeartbeatSettings(): JSX.Element {
-  const { heartbeatEnabled, heartbeatIntervalMinutes, update } = useSettingsStore()
+  const { extensions, update } = useSettingsStore()
+  const ns = (extensions[EXTENSION_ID] as HeartbeatNs | undefined) ?? {}
+  const enabled = ns.enabled ?? true
+  const intervalMinutes = ns.intervalMinutes ?? 5
+
+  const patchNs = (patch: HeartbeatNs): void => {
+    update({ extensions: { ...extensions, [EXTENSION_ID]: { ...ns, ...patch } } })
+  }
 
   return (
     <div>
@@ -29,16 +43,16 @@ export function HeartbeatSettings(): JSX.Element {
               <div style={s.desc}>Automatically process notes and execute due tasks in the background.</div>
             </div>
             <button
-              style={{ ...s.toggle, background: heartbeatEnabled ? 'var(--color-accent)' : 'var(--color-border)' }}
-              onClick={() => update({ heartbeatEnabled: !heartbeatEnabled })}
+              style={{ ...s.toggle, background: enabled ? 'var(--color-accent)' : 'var(--color-border)' }}
+              onClick={() => patchNs({ enabled: !enabled })}
               role="switch"
-              aria-checked={heartbeatEnabled}
+              aria-checked={enabled}
             >
-              <span style={{ ...s.thumb, left: heartbeatEnabled ? 18 : 2 }} />
+              <span style={{ ...s.thumb, left: enabled ? 18 : 2 }} />
             </button>
           </div>
 
-          <div style={{ ...s.row, opacity: heartbeatEnabled ? 1 : 0.45 }}>
+          <div style={{ ...s.row, opacity: enabled ? 1 : 0.45 }}>
             <div>
               <div style={s.infoLabel}>Run Every</div>
               <div style={s.desc}>How often the heartbeat checks for due tasks.</div>
@@ -49,12 +63,12 @@ export function HeartbeatSettings(): JSX.Element {
                   key={min}
                   style={{
                     ...s.intervalBtn,
-                    background: heartbeatIntervalMinutes === min ? 'var(--color-accent)' : 'var(--color-bg)',
-                    color: heartbeatIntervalMinutes === min ? 'var(--color-text-inverse)' : 'var(--color-text-primary)',
-                    borderColor: heartbeatIntervalMinutes === min ? 'var(--color-accent)' : 'var(--color-border)',
+                    background: intervalMinutes === min ? 'var(--color-accent)' : 'var(--color-bg)',
+                    color: intervalMinutes === min ? 'var(--color-text-inverse)' : 'var(--color-text-primary)',
+                    borderColor: intervalMinutes === min ? 'var(--color-accent)' : 'var(--color-border)',
                   }}
-                  onClick={() => update({ heartbeatIntervalMinutes: min })}
-                  disabled={!heartbeatEnabled}
+                  onClick={() => patchNs({ intervalMinutes: min })}
+                  disabled={!enabled}
                 >
                   {min < 60 ? `${min}m` : '1h'}
                 </button>

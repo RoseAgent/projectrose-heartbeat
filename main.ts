@@ -689,10 +689,20 @@ export function register(ctx: ExtCtx): () => void {
   ipcMain.handle('rose-heartbeat:taskContent', (_event, path: string, filename: string) =>
     getTaskContent(path, filename)
   )
-  ipcMain.handle('rose-heartbeat:getStatus', async () => {
+  // Read this extension's settings out of the host's namespaced
+  // `extensions['rose-heartbeat']` blob. The host has no flat heartbeat
+  // fields — defaults live here.
+  const readHeartbeatSettings = async (): Promise<{ enabled: boolean; intervalMinutes: number }> => {
     const settings = await ctx.getSettings()
-    const enabled = (settings.heartbeatEnabled as boolean) ?? true
-    const intervalMinutes = (settings.heartbeatIntervalMinutes as number) ?? 5
+    const ns = (settings.extensions as Record<string, Record<string, unknown>> | undefined)?.['rose-heartbeat'] ?? {}
+    return {
+      enabled: typeof ns.enabled === 'boolean' ? ns.enabled : true,
+      intervalMinutes: typeof ns.intervalMinutes === 'number' ? ns.intervalMinutes : 5,
+    }
+  }
+
+  ipcMain.handle('rose-heartbeat:getStatus', async () => {
+    const { enabled, intervalMinutes } = await readHeartbeatSettings()
     const intervalMs = intervalMinutes * 60_000
     const nextRun = !enabled
       ? null
@@ -710,9 +720,8 @@ export function register(ctx: ExtCtx): () => void {
   // Polling timer: check every minute, skip if disabled or interval hasn't elapsed
   const timer = setInterval(async () => {
     try {
-      const settings = await ctx.getSettings()
-      const enabled = (settings.heartbeatEnabled as boolean) ?? true
-      const intervalMs = ((settings.heartbeatIntervalMinutes as number) ?? 5) * 60 * 1000
+      const { enabled, intervalMinutes } = await readHeartbeatSettings()
+      const intervalMs = intervalMinutes * 60 * 1000
       if (!enabled || Date.now() - lastRun < intervalMs) return
       lastRun = Date.now()
       await runHeartbeat(rootPath, ctx)
@@ -721,8 +730,8 @@ export function register(ctx: ExtCtx): () => void {
 
   // Initial run shortly after project opens
   const initTimer = setTimeout(() => {
-    ctx.getSettings().then(async (settings) => {
-      if ((settings.heartbeatEnabled as boolean) ?? true) {
+    readHeartbeatSettings().then(async ({ enabled }) => {
+      if (enabled) {
         lastRun = Date.now()
         await runHeartbeat(rootPath, ctx).catch(() => {})
       }
